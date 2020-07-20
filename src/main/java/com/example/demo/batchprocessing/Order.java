@@ -1,6 +1,22 @@
-package com.example.demo.accessingdatamysql;
+package com.example.demo.batchprocessing;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="orders")
 public class Order {
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private Integer id;
+	
+	public Integer getId() {
+		return id;
+	}
+	
 	public Integer getCustomerId() {
 		return customerId;
 	}

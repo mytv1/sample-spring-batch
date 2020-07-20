@@ -6,9 +6,9 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.data.RepositoryItemWriter;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
-import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
@@ -16,8 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-
-import com.example.demo.accessingdatamysql.Order;
 
 @Configuration
 @EnableBatchProcessing
@@ -28,6 +26,9 @@ public class BatchConfiguration {
 	
 	@Autowired
 	public StepBuilderFactory stepBuilderFactory;
+
+	@Autowired
+	private OrderRepository orderRepository;
 	
 	@Bean
 	public FlatFileItemReader<Order> reader() {
@@ -47,14 +48,26 @@ public class BatchConfiguration {
 		return new OrderItemProcessor();
 	}
 	
+//	@Bean
+//	public JdbcBatchItemWriter writer(javax.sql.DataSource dataSource) {
+//		return new JdbcBatchItemWriterBuilder<Order>()
+//			.itemSqlParameterSourceProvider(new
+//				BeanPropertyItemSqlParameterSourceProvider<>())
+//			.sql("INSERT INTO orders (customer_id, item_id, item_price, item_name, purchase_date) VALUES (:CustomerId, :ItemId, :ItemPrice, :ItemName, :PurchaseDate)")
+//			.dataSource(dataSource)
+//			.build();
+//	}
+
 	@Bean
-	public JdbcBatchItemWriter writer(javax.sql.DataSource dataSource) {
-		return new JdbcBatchItemWriterBuilder<Order>()
-			.itemSqlParameterSourceProvider(new
-				BeanPropertyItemSqlParameterSourceProvider<>())
-			.sql("INSERT INTO orders (customer_id, item_id, item_price, item_name, purchase_date) VALUES (:CustomerId, :ItemId, :ItemPrice, :ItemName, :PurchaseDate)")
-			.dataSource(dataSource)
-			.build();
+	public ItemWriter<Order> writer() {
+		RepositoryItemWriter<Order> writer = new RepositoryItemWriter<>(); 
+//		return new RepositoryItemWriterBuilder<Order>()
+//				.repository(orderRepository)
+//				.methodName("save")
+//				.build();
+		writer.setRepository(orderRepository);
+		writer.setMethodName("save");
+		return writer;
 	}
 	
 	@Bean
@@ -69,7 +82,7 @@ public class BatchConfiguration {
 	}
 
 	@Bean
-	public Step step1(JdbcBatchItemWriter<Order> writer) {
+	public Step step1(ItemWriter<Order> writer) {
 	  return stepBuilderFactory.get("step1")
 	    .<Order, Order> chunk(10)
 	    .reader(reader())
