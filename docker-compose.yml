@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  database:
+    image: mysql:8.0
+    volumes:
+      - ./db/dbdata:/var/lib/mysql
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci','--default-authentication-plugin=mysql_native_password']
+    environment:
+      MYSQL_DATABASE: demo
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: demo
+      MYSQL_PASSWORD: demo
+    ports:
+        - "33061:3306"
